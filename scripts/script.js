@@ -54,6 +54,15 @@ const timestamp = () => {
   return `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
 };
 
+const sanitizeFileName = name => {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // remove accents
+    .replace(/[^a-z0-9-_.]+/gi, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '') || 'file';
+};
+
 const showStatus = (msg,type='info') => {
   elements.statusMsg.innerHTML = `<div class="status ${type}">${msg}</div>`;
 };
@@ -393,10 +402,11 @@ const initEventHandlers = () => {
       showExportStatus('Genererer eksport...','info');
       if (state.selectedCategories.size) {
         state.selectedCategories.forEach(cat=>{
+          const safe = sanitizeFileName(cat);
           const p = parents.filter(r=> (r['tax:product_cat']||'Ukategoriseret')===cat);
-          addCSV(p,`parents-${cat}-${timestamp()}.csv`);
+          addCSV(p,`parents-${safe}-${timestamp()}.csv`);
           const v = variations.filter(vr=>p.find(pp=>pp.sku===vr.parent_sku));
-          addCSV(v,`variations-${cat}-${timestamp()}.csv`,true);
+          addCSV(v,`variations-${safe}-${timestamp()}.csv`,true);
         });
       } else {
         addCSV(parents,`parents-${timestamp()}.csv`);
