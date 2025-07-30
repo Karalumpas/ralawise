@@ -1,5 +1,5 @@
 // Constants
-const MAX_VARIATIONS_PER_FILE = 25000;
+const DEFAULT_MAX_VARIATIONS_PER_FILE = 25000;
 const PRICE_FIELDS = ['price', 'regular_price', 'sale_price'];
 const PREVIEW_LIMIT = 20;
 
@@ -34,6 +34,7 @@ const elements = {
   categoryCount: document.getElementById('categoryCount'),
   productCount: document.getElementById('productCount'),
   exchangeRateInput: document.getElementById('exchangeRateInput'),
+  maxVariationsInput: document.getElementById('maxVariationsInput'),
   exportBtn: document.getElementById('exportBtn'),
   previewHeader: document.getElementById('previewHeader'),
   previewBody: document.getElementById('previewBody'),
@@ -363,7 +364,7 @@ const initEventHandlers = () => {
     const parents = getSelectedParents(), variations = getSelectedVariations();
     if (!parents.length && !variations.length) return showExportStatus('Ingen data valgt til eksport','warning');
     const files = [];
-    const addCSV = (rows,name)=>{
+    const addCSVChunk = (rows,name)=>{
       if (!rows.length) return;
       const cols = Object.keys(rows[0]);
       const data = rows.map(r=>{
@@ -373,6 +374,21 @@ const initEventHandlers = () => {
       });
       files.push({ filename: name, content: Papa.unparse(data,{columns:cols,delimiter:',',quotes:true}) });
     };
+    const addCSV = (rows,name,isVariations=false)=>{
+      if(!rows.length) return;
+      if(isVariations){
+        const maxLines = parseInt(elements.maxVariationsInput.value,10) || DEFAULT_MAX_VARIATIONS_PER_FILE;
+        for(let i=0;i<rows.length;i+=maxLines){
+          const chunk = rows.slice(i,i+maxLines);
+          const idx = Math.floor(i/maxLines)+1;
+          const base = name.replace(/\.csv$/,'');
+          const fname = rows.length>maxLines ? `${base}-part${idx}.csv` : `${base}.csv`;
+          addCSVChunk(chunk,fname);
+        }
+      } else {
+        addCSVChunk(rows,name);
+      }
+    };
     try {
       showExportStatus('Genererer eksport...','info');
       if (state.selectedCategories.size) {
@@ -380,11 +396,11 @@ const initEventHandlers = () => {
           const p = parents.filter(r=> (r['tax:product_cat']||'Ukategoriseret')===cat);
           addCSV(p,`parents-${cat}-${timestamp()}.csv`);
           const v = variations.filter(vr=>p.find(pp=>pp.sku===vr.parent_sku));
-          addCSV(v,`variations-${cat}-${timestamp()}.csv`);
+          addCSV(v,`variations-${cat}-${timestamp()}.csv`,true);
         });
       } else {
         addCSV(parents,`parents-${timestamp()}.csv`);
-        addCSV(variations,`variations-${timestamp()}.csv`);
+        addCSV(variations,`variations-${timestamp()}.csv`,true);
       }
       if (!files.length) return showExportStatus('Ingen data til eksport','warning');
       showExportStatus('Genererer ZIP-fil...','info');
