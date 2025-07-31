@@ -39,9 +39,9 @@ const elements = {
   percentageInput: document.getElementById('percentageInput'),
   maxVariationsInput: document.getElementById('maxVariationsInput'),
   exportBtn: document.getElementById('exportBtn'),
-  shopUrl: document.getElementById('shopUrl'),
-  consumerKey: document.getElementById('consumerKey'),
-  consumerSecret: document.getElementById('consumerSecret'),
+  shopSelect: document.getElementById('shopSelect'),
+  apiIndicator: document.getElementById('apiIndicator'),
+  pushStatus: document.getElementById('pushStatus'),
   pushToWooBtn: document.getElementById('pushToWooBtn'),
   previewHeader: document.getElementById('previewHeader'),
   previewBody: document.getElementById('previewBody'),
@@ -80,6 +80,16 @@ const showExportStatus = (msg,type='info') => {
   elements.exportStatus.innerHTML = `<div class="status ${type}">${msg}</div>`;
 };
 
+const showPushStatus = (msg,type='info') => {
+  elements.pushStatus.innerHTML = `<div class="status ${type}">${msg}</div>`;
+};
+
+const setApiIndicator = status => {
+  elements.apiIndicator.classList.remove('ok','fail');
+  if(status==='ok') elements.apiIndicator.classList.add('ok');
+  else if(status==='fail') elements.apiIndicator.classList.add('fail');
+};
+
 const setButtonLoading = (btn,loading) => {
   const svg = btn.querySelector('svg'), txt = btn.querySelector('span')||btn;
   if (loading) {
@@ -91,6 +101,33 @@ const setButtonLoading = (btn,loading) => {
     if(svg) svg.style.display='block';
     txt.textContent = btn.id==='processBtn'? 'Behandl filer' : 'Eksporter CSV';
   }
+};
+
+const loadShops = () => {
+  try { return JSON.parse(localStorage.getItem('wooShops')) || []; } catch { return []; }
+};
+
+const populateShopSelect = () => {
+  const shops = loadShops();
+  if(!shops.length){
+    elements.shopSelect.innerHTML = '<option value="">Ingen shops</option>';
+    setApiIndicator('fail');
+    return;
+  }
+  elements.shopSelect.innerHTML = shops.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+};
+
+const testApiConnection = async () => {
+  const shops = loadShops();
+  const shop = shops.find(s=>s.id===elements.shopSelect.value);
+  if(!shop){ setApiIndicator('fail'); return; }
+  const auth = btoa(`${shop.key}:${shop.secret}`);
+  try {
+    const res = await fetch(`${shop.url.replace(/\/+$/,'')}/wp-json/wc/v3/products?per_page=1`, {
+      headers:{ Authorization:`Basic ${auth}` }
+    });
+    setApiIndicator(res.ok ? 'ok' : 'fail');
+  } catch { setApiIndicator('fail'); }
 };
 
 
@@ -396,17 +433,18 @@ const mapVariationToWoo = (variation) => {
 
 // Push selected products to WooCommerce
 const pushToWooCommerce = async () => {
-  const shopUrl = elements.shopUrl.value.trim().replace(/\/+$/, '');
-  const key = elements.consumerKey.value.trim();
-  const secret = elements.consumerSecret.value.trim();
-  if (!shopUrl || !key || !secret) {
-    return showStatus('Udfyld WooCommerce URL og API-nøgler','error');
-  }
-  try { new URL(shopUrl); } catch { return showStatus('Ugyldig shop URL','error'); }
+  const shops = loadShops();
+  const shop = shops.find(s=>s.id===elements.shopSelect.value);
+  if(!shop) return showPushStatus('Vælg en shop først','error');
+  const shopUrl = shop.url.replace(/\/+$/,'');
+  const key = shop.key;
+  const secret = shop.secret;
+
+  try { new URL(shopUrl); } catch { return showPushStatus('Ugyldig shop URL','error'); }
 
   const parents = getSelectedParents();
   const variations = getSelectedVariations();
-  if (!parents.length) return showStatus('Ingen produkter valgt til push','warning');
+  if (!parents.length) return showPushStatus('Ingen produkter valgt til push','warning');
 
   const auth = btoa(`${key}:${secret}`);
   const headers = { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' };
@@ -415,11 +453,11 @@ const pushToWooCommerce = async () => {
   for (const parent of parents) {
     const productData = mapParentToWoo(parent);
     if (!productData.sku || (productData.type==='simple' && !productData.regular_price)) {
-      showStatus(`Springer over produkt uden SKU/pris: ${parent.sku||parent.name}`,'error');
+      showPushStatus(`Springer over produkt uden SKU/pris: ${parent.sku||parent.name}`,'error');
       continue;
     }
     try {
-      showStatus(`Sender ${productData.sku}...`,'info');
+      showPushStatus(`Sender ${productData.sku}...`,'info');
       const res = await fetch(`${shopUrl}/wp-json/wc/v3/products`, {
         method: 'POST', headers, body: JSON.stringify(productData)
       });
@@ -431,7 +469,7 @@ const pushToWooCommerce = async () => {
         for (const variation of vars) {
           const varData = mapVariationToWoo(variation);
           if (!varData.sku || !varData.regular_price) {
-            showStatus(`Springer variation uden SKU/pris for ${parent.sku}`,'error');
+            showPushStatus(`Springer variation uden SKU/pris for ${parent.sku}`,'error');
             continue;
           }
           const vr = await fetch(`${shopUrl}/wp-json/wc/v3/products/${data.id}/variations`, {
@@ -442,10 +480,10 @@ const pushToWooCommerce = async () => {
         }
       }
     } catch(e) {
-      return showStatus(`Fejl ved ${parent.sku}: ${e.message}`,'error');
+      return showPushStatus(`Fejl ved ${parent.sku}: ${e.message}`,'error');
     }
   }
-  showStatus(`${sent} produkter sendt`,'success');
+  showPushStatus(`${sent} produkter sendt`,'success');
 };
 
 // Event handlers
@@ -579,12 +617,15 @@ const initEventHandlers = () => {
 
   // push to WooCommerce
   elements.pushToWooBtn.addEventListener('click', pushToWooCommerce);
+  elements.shopSelect.addEventListener('change', testApiConnection);
 };
 
 // Init app
 const init = () => {
   showStatus('Upload én eller flere ZIP-filer med WooCommerce CSV-data','info');
   initEventHandlers();
+  populateShopSelect();
+  testApiConnection();
   fetchHistory();
 };
 

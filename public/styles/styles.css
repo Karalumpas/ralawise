@@ -503,3 +503,15 @@ body {
   padding-bottom: 1rem;
 }
 
+.status-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  margin-left: 0.5rem;
+}
+
+.status-indicator.ok { background: #16a34a; }
+.status-indicator.fail { background: #dc2626; }
+

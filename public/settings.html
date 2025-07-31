@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API Indstillinger</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>API Indstillinger</h1>
+      <p>Gem dine WooCommerce shops</p>
+    </div>
+    <div class="p-4">
+      <div class="controls-section">
+        <div class="controls-grid">
+          <label class="rate-label" for="nameInput">Navn:</label>
+          <input type="text" class="rate-input" id="nameInput">
+          <label class="rate-label" for="urlInput">URL:</label>
+          <input type="text" class="rate-input" id="urlInput">
+          <label class="rate-label" for="keyInput">Consumer Key:</label>
+          <input type="text" class="rate-input" id="keyInput">
+          <label class="rate-label" for="secretInput">Consumer Secret:</label>
+          <input type="text" class="rate-input" id="secretInput">
+          <button class="btn" id="addShopBtn">Tilføj Shop</button>
+        </div>
+        <div id="settingsStatus" class="my-4"></div>
+      </div>
+
+      <h2 class="text-lg font-semibold mt-6 mb-2">Gemte shops</h2>
+      <ul id="shopList" class="space-y-2"></ul>
+      <a href="index.html" class="btn mt-4 inline-block">Tilbage</a>
+    </div>
+  </div>
+  <script src="scripts/settings.js"></script>
+</body>
+</html>
