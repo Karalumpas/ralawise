@@ -14,7 +14,15 @@ const state = {
   statistics: {},
   filteredCategories: [],
   filteredProducts: [],
-  activePreviewTab: 'parents'
+  activePreviewTab: 'parents',
+  settings: {
+    url: '',
+    key: '',
+    secret: '',
+    version: 'wc/v3',
+    ignoreSsl: false,
+    visibility: 'visible'
+  }
 };
 
 // DOM elements
@@ -39,11 +47,20 @@ const elements = {
   percentageInput: document.getElementById('percentageInput'),
   maxVariationsInput: document.getElementById('maxVariationsInput'),
   exportBtn: document.getElementById('exportBtn'),
+  exportApiBtn: document.getElementById('exportApiBtn'),
   previewHeader: document.getElementById('previewHeader'),
   previewBody: document.getElementById('previewBody'),
   exportStatus: document.getElementById('exportStatus'),
   historySection: document.getElementById('historySection'),
-  historyList: document.getElementById('historyList')
+  historyList: document.getElementById('historyList'),
+  storeUrlInput: document.getElementById('storeUrlInput'),
+  consumerKeyInput: document.getElementById('consumerKeyInput'),
+  consumerSecretInput: document.getElementById('consumerSecretInput'),
+  apiVersionInput: document.getElementById('apiVersionInput'),
+  ignoreSslInput: document.getElementById('ignoreSslInput'),
+  visibilityInput: document.getElementById('visibilityInput'),
+  testConnectionBtn: document.getElementById('testConnectionBtn'),
+  connectionStatus: document.getElementById('connectionStatus')
 };
 
 // Utility functions
@@ -467,6 +484,58 @@ const initEventHandlers = () => {
       fetchHistory();
     } catch(e) {
       showExportStatus(`Eksport fejl: ${e.message}`,'error');
+    }
+  });
+
+  elements.testConnectionBtn.addEventListener('click', async ()=>{
+    elements.connectionStatus.textContent = 'Tester...';
+    const body = {
+      url: elements.storeUrlInput.value.trim(),
+      key: elements.consumerKeyInput.value.trim(),
+      secret: elements.consumerSecretInput.value.trim(),
+      version: elements.apiVersionInput.value.trim()||'wc/v3',
+      ignoreSsl: elements.ignoreSslInput.checked
+    };
+    try {
+      const res = await fetch('/api/test-woocommerce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const js = await res.json();
+      if (!res.ok || !js.success) throw new Error(js.error||'Fejl');
+      elements.connectionStatus.textContent = 'Forbindelse OK';
+      state.settings = { ...state.settings, ...body };
+    } catch(e){
+      elements.connectionStatus.textContent = `Fejl: ${e.message}`;
+    }
+  });
+
+  elements.exportApiBtn.addEventListener('click', async ()=>{
+    const parents = getSelectedParents();
+    if (!parents.length) return showExportStatus('Ingen produkter valgt','warning');
+    const body = {
+      url: elements.storeUrlInput.value.trim(),
+      key: elements.consumerKeyInput.value.trim(),
+      secret: elements.consumerSecretInput.value.trim(),
+      version: elements.apiVersionInput.value.trim()||'wc/v3',
+      ignoreSsl: elements.ignoreSslInput.checked,
+      visibility: elements.visibilityInput.value.trim(),
+      products: parents,
+      categories: Array.from(state.selectedCategories).map(c=>({ name: c }))
+    };
+    try {
+      showExportStatus('Eksporterer til WooCommerce...','info');
+      const res = await fetch('/api/export-woocommerce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const js = await res.json();
+      if (!res.ok || !js.success) throw new Error(js.error||'Fejl');
+      showExportStatus(`Eksporteret ${js.products} produkter`,'success');
+    } catch(e){
+      showExportStatus(`Fejl: ${e.message}`,'error');
     }
   });
 };
