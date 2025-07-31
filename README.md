@@ -19,27 +19,27 @@ En webbaseret værktøj til at behandle og eksportere WooCommerce produktdata fr
 
 ## Teknologier
 
+- Node.js & Express
+- Tailwind CSS
 - Vanilla JavaScript
 - [PapaParse](https://www.papaparse.com/) til CSV parsing
 - [JSZip](https://stuk.github.io/jszip/) til ZIP fil håndtering
-- CSS Grid og Flexbox til responsivt layout
 
 ## Kom i gang
 
-1. Åbn `index.html` i en moderne browser
-2. Upload ZIP-filer med WooCommerce CSV-data via drag-and-drop eller fil-vælger
-3. Behandl filerne og vælg produkter/kategorier til eksport
-4. Indstil valutakurs hvis nødvendigt
-5. Generer nye CSV-filer pakket i en ZIP-fil
+1. Kør `npm install` (ingen afhængigheder installeres offline)
+2. Start serveren med `node server.js`
+3. Åbn `http://localhost:3000` i din browser
+4. Upload ZIP-filer, vælg data og eksporter
 
 ## Udvikling
 
-Projektet bruger ikke build tools eller dependencies udover de CDN-leverede biblioteker. For at udvikle:
+Projektet kører nu som en lille Node.js applikation.
 
 1. Klon repository'et
-2. Åbn `index.html` i en browser
-3. Rediger JavaScript i `scripts/script.js`
-4. Rediger CSS i `styles/styles.css`
+2. Kør `npm install`
+3. Start serveren med `node server.js`
+4. Rediger filer under `public/`
 
 ## Licensering
 

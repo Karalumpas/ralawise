@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>WooCommerce Advanced Exporter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles/styles.css">
 </head>
 <body>
@@ -95,7 +96,12 @@
           </div>
         </div>
 
-        <div id="exportStatus"></div>
+        <div id="exportStatus" class="my-4"></div>
+
+        <div id="historySection" class="mt-8 hidden">
+          <h2 class="text-xl font-semibold mb-2">Historik</h2>
+          <div id="historyList" class="space-y-2"></div>
+        </div>
       </div>
     </div>
   </div>

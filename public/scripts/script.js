@@ -38,7 +38,9 @@ const elements = {
   exportBtn: document.getElementById('exportBtn'),
   previewHeader: document.getElementById('previewHeader'),
   previewBody: document.getElementById('previewBody'),
-  exportStatus: document.getElementById('exportStatus')
+  exportStatus: document.getElementById('exportStatus'),
+  historySection: document.getElementById('historySection'),
+  historyList: document.getElementById('historyList')
 };
 
 // Utility functions
@@ -226,6 +228,23 @@ const updateFileList = () => {
       </div>
     </div>
   `).join('');
+};
+
+// Fetch and render history
+const fetchHistory = async () => {
+  try {
+    const res = await fetch('/api/history');
+    if (!res.ok) throw new Error('Cannot load history');
+    const entries = await res.json();
+    if (!entries.length) return;
+    elements.historySection.classList.remove('hidden');
+    elements.historyList.innerHTML = entries.map(e=>`<div class="p-2 bg-gray-100 rounded" data-file="${e.file}">
+        <a href="/history/${e.file}" class="text-blue-600 underline mr-2">${e.file}</a>
+        <span class="text-sm">(${new Date(e.timestamp).toLocaleString()}, P: ${e.parents}, V: ${e.variations})</span>
+      </div>`).join('');
+  } catch {
+    console.warn('Unable to fetch history');
+  }
 };
 
 // Handle file selection
@@ -417,13 +436,23 @@ const initEventHandlers = () => {
       const zip = new JSZip();
       files.forEach(f=> zip.file(f.filename,f.content));
       const blob = await zip.generateAsync({ type:'blob', compression:'DEFLATE', compressionOptions:{level:6} });
+      const fileName = `woocommerce-export-${timestamp()}.zip`;
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `woocommerce-export-${timestamp()}.zip`;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+
+      // send to server for history
+      const fd = new FormData();
+      fd.append('file', blob, fileName);
+      fd.append('parents', parents.length);
+      fd.append('variations', variations.length);
+      try { await fetch('/api/history', { method:'POST', body: fd }); } catch {}
+
       showExportStatus(`ZIP-fil genereret med ${files.length} filer!`,'success');
+      fetchHistory();
     } catch(e) {
       showExportStatus(`Eksport fejl: ${e.message}`,'error');
     }
@@ -434,6 +463,7 @@ const initEventHandlers = () => {
 const init = () => {
   showStatus('Upload én eller flere ZIP-filer med WooCommerce CSV-data','info');
   initEventHandlers();
+  fetchHistory();
 };
 
 document.addEventListener('DOMContentLoaded', init);
