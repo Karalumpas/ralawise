@@ -56,6 +56,7 @@
               </svg>
               Eksporter CSV
             </button>
+            <button class="btn ml-2" id="exportApiBtn">Eksportér til webshop</button>
           </div>
           <div id="exportStatus" class="my-4"></div>
         </div>
@@ -105,6 +106,41 @@
         <div id="historySection" class="mt-8 hidden">
           <h2 class="text-xl font-semibold mb-2">Historik</h2>
           <div id="historyList" class="space-y-2"></div>
+        </div>
+
+        <div id="settingsSection" class="mt-8">
+          <h2 class="text-xl font-semibold mb-2">WooCommerce indstillinger</h2>
+          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <label class="rate-label" for="storeUrlInput">Store URL:</label>
+              <input type="text" class="rate-input" id="storeUrlInput" placeholder="https://example.com">
+            </div>
+            <div>
+              <label class="rate-label" for="consumerKeyInput">Consumer Key:</label>
+              <input type="text" class="rate-input" id="consumerKeyInput">
+            </div>
+            <div>
+              <label class="rate-label" for="consumerSecretInput">Consumer Secret:</label>
+              <input type="text" class="rate-input" id="consumerSecretInput">
+            </div>
+            <div>
+              <label class="rate-label" for="apiVersionInput">API Version:</label>
+              <input type="text" class="rate-input" id="apiVersionInput" value="wc/v3">
+            </div>
+            <div>
+              <label class="inline-flex items-center mt-6">
+                <input type="checkbox" id="ignoreSslInput" class="mr-2">Ignorer SSL fejl
+              </label>
+            </div>
+            <div>
+              <label class="rate-label" for="visibilityInput">Standard synlighed:</label>
+              <input type="text" class="rate-input" id="visibilityInput" value="visible">
+            </div>
+          </div>
+          <div class="mt-4">
+            <button class="btn" id="testConnectionBtn">Test forbindelse</button>
+            <span id="connectionStatus" class="ml-4"></span>
+          </div>
         </div>
       </div>
     </div>
