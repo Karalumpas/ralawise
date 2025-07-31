@@ -39,6 +39,10 @@ const elements = {
   percentageInput: document.getElementById('percentageInput'),
   maxVariationsInput: document.getElementById('maxVariationsInput'),
   exportBtn: document.getElementById('exportBtn'),
+  shopUrl: document.getElementById('shopUrl'),
+  consumerKey: document.getElementById('consumerKey'),
+  consumerSecret: document.getElementById('consumerSecret'),
+  pushToWooBtn: document.getElementById('pushToWooBtn'),
   previewHeader: document.getElementById('previewHeader'),
   previewBody: document.getElementById('previewBody'),
   exportStatus: document.getElementById('exportStatus'),
@@ -341,6 +345,109 @@ const processProductData = async () => {
   updatePreview();
 };
 
+// Map parent product to WooCommerce format
+const mapParentToWoo = (parent) => {
+  const prod = {
+    name: parent.post_title || parent.name || parent.sku,
+    sku: parent.sku,
+    status: (parent.post_status || parent.status || 'publish').toLowerCase()
+  };
+  if (parent.regular_price || parent.price) {
+    prod.regular_price = String(parent.regular_price || parent.price);
+  }
+  if (parent.post_content) prod.description = parent.post_content;
+  if (parent.post_excerpt) prod.short_description = parent.post_excerpt;
+  const cats = (parent['tax:product_cat'] || '').split('|').map(c=>c.trim()).filter(Boolean);
+  if (cats.length) prod.categories = cats.map(name => ({ name }));
+  const imgs = (parent.images || '').split('|').map(i=>i.trim()).filter(Boolean);
+  if (imgs.length) prod.images = imgs.map(src => ({ src }));
+  const attrCols = Object.keys(parent).filter(k=>k.startsWith('attribute:') && parent[k]);
+  if ((parent['tax:product_type']||'').includes('variable') || attrCols.length) {
+    prod.type = 'variable';
+    prod.attributes = attrCols.map(col=>({
+      name: col.replace('attribute:', '').replace(/_/g, ' '),
+      visible: true,
+      variation: true,
+      options: parent[col].split('|').map(v=>v.trim()).filter(Boolean)
+    }));
+  } else {
+    prod.type = 'simple';
+  }
+  return prod;
+};
+
+// Map variation to WooCommerce format
+const mapVariationToWoo = (variation) => {
+  const v = {
+    sku: variation.sku,
+    regular_price: String(variation.regular_price || variation.price || '')
+  };
+  const img = (variation.images || '').split('|').map(i=>i.trim()).find(Boolean);
+  if (img) v.image = { src: img };
+  const attrCols = Object.keys(variation).filter(k=>k.startsWith('meta:attribute_') && variation[k]);
+  if (attrCols.length) {
+    v.attributes = attrCols.map(col=>({
+      name: col.replace('meta:attribute_', '').replace(/_/g, ' '),
+      option: variation[col]
+    }));
+  }
+  return v;
+};
+
+// Push selected products to WooCommerce
+const pushToWooCommerce = async () => {
+  const shopUrl = elements.shopUrl.value.trim().replace(/\/+$/, '');
+  const key = elements.consumerKey.value.trim();
+  const secret = elements.consumerSecret.value.trim();
+  if (!shopUrl || !key || !secret) {
+    return showStatus('Udfyld WooCommerce URL og API-nøgler','error');
+  }
+  try { new URL(shopUrl); } catch { return showStatus('Ugyldig shop URL','error'); }
+
+  const parents = getSelectedParents();
+  const variations = getSelectedVariations();
+  if (!parents.length) return showStatus('Ingen produkter valgt til push','warning');
+
+  const auth = btoa(`${key}:${secret}`);
+  const headers = { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' };
+
+  let sent = 0;
+  for (const parent of parents) {
+    const productData = mapParentToWoo(parent);
+    if (!productData.sku || (productData.type==='simple' && !productData.regular_price)) {
+      showStatus(`Springer over produkt uden SKU/pris: ${parent.sku||parent.name}`,'error');
+      continue;
+    }
+    try {
+      showStatus(`Sender ${productData.sku}...`,'info');
+      const res = await fetch(`${shopUrl}/wp-json/wc/v3/products`, {
+        method: 'POST', headers, body: JSON.stringify(productData)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Ukendt fejl');
+      sent++;
+      if (productData.type === 'variable') {
+        const vars = variations.filter(v=>v.parent_sku===parent.sku);
+        for (const variation of vars) {
+          const varData = mapVariationToWoo(variation);
+          if (!varData.sku || !varData.regular_price) {
+            showStatus(`Springer variation uden SKU/pris for ${parent.sku}`,'error');
+            continue;
+          }
+          const vr = await fetch(`${shopUrl}/wp-json/wc/v3/products/${data.id}/variations`, {
+            method: 'POST', headers, body: JSON.stringify(varData)
+          });
+          const vrData = await vr.json();
+          if (!vr.ok) throw new Error(vrData.message || 'Variation fejl');
+        }
+      }
+    } catch(e) {
+      return showStatus(`Fejl ved ${parent.sku}: ${e.message}`,'error');
+    }
+  }
+  showStatus(`${sent} produkter sendt`,'success');
+};
+
 // Event handlers
 const initEventHandlers = () => {
   // file upload
@@ -469,6 +576,9 @@ const initEventHandlers = () => {
       showExportStatus(`Eksport fejl: ${e.message}`,'error');
     }
   });
+
+  // push to WooCommerce
+  elements.pushToWooBtn.addEventListener('click', pushToWooCommerce);
 };
 
 // Init app
