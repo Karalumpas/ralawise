@@ -30,7 +30,8 @@ En webbaseret værktøj til at behandle og eksportere WooCommerce produktdata fr
 1. Kør `npm install` (ingen afhængigheder installeres offline)
 2. Start serveren med `node server.js`
 3. Åbn `http://localhost:3000` i din browser
-4. Upload ZIP-filer, vælg data og eksporter
+4. Gå til `dashboard.html` for at administrere dine WooCommerce shops
+5. Upload ZIP-filer, vælg data og eksporter
 
 ## Udvikling
 
