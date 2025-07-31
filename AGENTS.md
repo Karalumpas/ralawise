@@ -7,5 +7,4 @@ CSV exports. When updating or adding code, keep these rules in mind:
 * Do not remove the sample ZIP files located in `public/samples/`.
 * Before committing your changes, run `npm test` to ensure the repository's test
   script completes (it currently prints a message only).
-* After testing, commit directly to the main branch.
 
