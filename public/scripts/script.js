@@ -19,12 +19,14 @@ const state = {
 
 // DOM elements
 const elements = {
+  uploadGroup: document.getElementById('uploadGroup'),
   uploadSection: document.getElementById('uploadSection'),
   fileInput: document.getElementById('fileInput'),
   fileList: document.getElementById('fileList'),
   processBtn: document.getElementById('processBtn'),
   btnText: document.getElementById('btnText'),
   statusMsg: document.getElementById('statusMsg'),
+  mainContent: document.getElementById('mainContent'),
   exportSection: document.getElementById('exportSection'),
   statsGrid: document.getElementById('statsGrid'),
   categoryList: document.getElementById('categoryList'),
@@ -34,14 +36,14 @@ const elements = {
   categoryCount: document.getElementById('categoryCount'),
   productCount: document.getElementById('productCount'),
   exchangeRateInput: document.getElementById('exchangeRateInput'),
+  percentageInput: document.getElementById('percentageInput'),
   maxVariationsInput: document.getElementById('maxVariationsInput'),
   exportBtn: document.getElementById('exportBtn'),
   previewHeader: document.getElementById('previewHeader'),
   previewBody: document.getElementById('previewBody'),
   exportStatus: document.getElementById('exportStatus'),
   historySection: document.getElementById('historySection'),
-  historyList: document.getElementById('historyList'),
-  stepperSteps: document.querySelectorAll('#stepper .step')
+  historyList: document.getElementById('historyList')
 };
 
 // Utility functions
@@ -87,17 +89,7 @@ const setButtonLoading = (btn,loading) => {
   }
 };
 
-const setActiveStep = step => {
-  elements.stepperSteps.forEach(li => {
-    if (li.dataset.step === step) {
-      li.classList.add('text-indigo-600','font-semibold');
-      li.classList.remove('text-gray-400');
-    } else {
-      li.classList.remove('text-indigo-600','font-semibold');
-      li.classList.add('text-gray-400');
-    }
-  });
-};
+
 
 // CSV parsing
 const parseCSV = content => {
@@ -204,7 +196,9 @@ const updatePreview = () => {
     elements.previewBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2rem;">Ingen data til forhåndsvisning.</td></tr>';
     return;
   }
-  const rate = parseFloat(elements.exchangeRateInput.value.replace(',', '.'))||1;
+  const exch = parseFloat(elements.exchangeRateInput.value.replace(',', '.'))||1;
+  const pct = parseFloat(elements.percentageInput.value.replace(',', '.'))||0;
+  const rate = exch * (1 + pct/100);
   const data = raw.map(r=>{
     const o = {...r};
     PRICE_FIELDS.forEach(f=>{ if(f in o) o[f]=convertPrice(o[f],rate); });
@@ -277,7 +271,6 @@ const handleFiles = files => {
 const processZipFiles = async () => {
   setButtonLoading(elements.processBtn,true);
   showStatus('Læser ZIP-filer...','info');
-  setActiveStep('process');
   state.processedData = { parents:[], variations:[] };
   state.categories.clear(); state.products.clear();
   state.selectedCategories.clear(); state.selectedProducts.clear();
@@ -306,7 +299,7 @@ const processZipFiles = async () => {
     }
     await processProductData();
     elements.exportSection.classList.remove('hidden');
-    setActiveStep('filter');
+    elements.mainContent.appendChild(elements.uploadGroup);
     elements.exportSection.scrollIntoView({behavior:'smooth'});
     showStatus('Filer behandlet succesfuldt!','success');
   } catch (e) {
@@ -392,6 +385,7 @@ const initEventHandlers = () => {
 
   // preview tabs & rate change
   elements.exchangeRateInput.addEventListener('input', updatePreview);
+  elements.percentageInput.addEventListener('input', updatePreview);
   document.querySelectorAll('.preview-tab').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       document.querySelectorAll('.preview-tab').forEach(b=>b.classList.remove('active'));
@@ -403,8 +397,10 @@ const initEventHandlers = () => {
 
   // export
   elements.exportBtn.addEventListener('click', async ()=>{
-    const rate = parseFloat(elements.exchangeRateInput.value.replace(',', '.'));
-    if (!rate||rate<=0) return showExportStatus('Ugyldig valutakurs','error');
+    const exch = parseFloat(elements.exchangeRateInput.value.replace(',', '.'))||1;
+    const pct = parseFloat(elements.percentageInput.value.replace(',', '.'))||0;
+    const rate = exch * (1 + pct/100);
+    if (!rate||rate<=0) return showExportStatus('Ugyldig faktor','error');
     const parents = getSelectedParents(), variations = getSelectedVariations();
     if (!parents.length && !variations.length) return showExportStatus('Ingen data valgt til eksport','warning');
     const files = [];
@@ -468,7 +464,6 @@ const initEventHandlers = () => {
       try { await fetch('/api/history', { method:'POST', body: fd }); } catch {}
 
       showExportStatus(`ZIP-fil genereret med ${files.length} filer!`,'success');
-      setActiveStep('export');
       fetchHistory();
     } catch(e) {
       showExportStatus(`Eksport fejl: ${e.message}`,'error');
@@ -479,7 +474,6 @@ const initEventHandlers = () => {
 // Init app
 const init = () => {
   showStatus('Upload én eller flere ZIP-filer med WooCommerce CSV-data','info');
-  setActiveStep('upload');
   initEventHandlers();
   fetchHistory();
 };
