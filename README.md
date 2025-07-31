@@ -31,6 +31,7 @@ En webbaseret værktøj til at behandle og eksportere WooCommerce produktdata fr
 2. Start serveren med `node server.js`
 3. Åbn `http://localhost:3000` i din browser
 4. Gå til `dashboard.html` for at administrere dine WooCommerce shops
+   - Her kan du også aktivere eller deaktivere SSL for hver shop
 5. Upload ZIP-filer, vælg data og eksporter
 
 ## Udvikling

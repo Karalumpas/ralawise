@@ -14,6 +14,7 @@ const elements = {
   shopUrl: document.getElementById('shopUrl'),
   consumerKey: document.getElementById('consumerKey'),
   consumerSecret: document.getElementById('consumerSecret'),
+  useSSL: document.getElementById('useSSL'),
   testConnection: document.getElementById('testConnection'),
   addShop: document.getElementById('addShop'),
   connectionStatus: document.getElementById('connectionStatus'),
@@ -30,7 +31,12 @@ const showStatus = (msg, type='info', container=elements.connectionStatus) => {
 };
 
 const loadShops = () => {
-  try { return JSON.parse(localStorage.getItem('wooShops')) || []; } catch { return []; }
+  try {
+    const data = JSON.parse(localStorage.getItem('wooShops')) || [];
+    return data.map(s => Object.assign({ ssl: true }, s));
+  } catch {
+    return [];
+  }
 };
 
 const saveShops = shops => localStorage.setItem('wooShops', JSON.stringify(shops));
@@ -44,9 +50,12 @@ const validateUrl = url => {
 const testShopConnection = async shop => {
   if(!validateUrl(shop.url)) throw new Error('Ugyldig URL format');
   const cleanUrl = shop.url.replace(/\/+$/, '');
+  const base = cleanUrl.replace(/^https?:\/\//, '');
+  const protocol = shop.ssl === false ? 'http://' : 'https://';
+  const target = protocol + base;
   const auth = btoa(`${shop.key}:${shop.secret}`);
   try {
-    const res = await fetch(`${cleanUrl}/wp-json/wc/v3/system_status`, {
+    const res = await fetch(`${target}/wp-json/wc/v3/system_status`, {
       headers:{ Authorization:`Basic ${auth}`, 'Content-Type':'application/json' },
       method:'GET', mode:'cors'
     });
@@ -54,7 +63,7 @@ const testShopConnection = async shop => {
     return { success: true };
   } catch (err) {
     try {
-      const r = await fetch(`${cleanUrl}/wp-json/wc/v3/products?per_page=1`, {
+      const r = await fetch(`${target}/wp-json/wc/v3/products?per_page=1`, {
         headers:{ Authorization:`Basic ${auth}`, 'Content-Type':'application/json' },
         method:'GET', mode:'cors'
       });
@@ -90,7 +99,7 @@ const renderShops = () => {
     const cls = s.status||'disconnected';
     const txt = { connected:'Forbundet',disconnected:'Ikke forbundet',testing:'Tester...' }[cls]||'Ukendt';
     return `<div class="shop-card ${cls}" data-id="${s.id}">
-      <div class="shop-header"><div class="shop-info"><div class="shop-name">${s.name}</div><div class="shop-url">${s.url}</div><div class="shop-status"><div class="status-dot ${cls}"></div><span>${txt}</span></div></div></div>
+      <div class="shop-header"><div class="shop-info"><div class="shop-name">${s.name}</div><div class="shop-url">${s.url}</div><div class="shop-ssl">SSL: ${s.ssl === false ? 'Fra' : 'Til'}</div><div class="shop-status"><div class="status-dot ${cls}"></div><span>${txt}</span></div></div></div>
       <div class="shop-actions">
         <button class="btn btn-secondary test-shop-btn" data-id="${s.id}">Test</button>
         <button class="btn btn-secondary edit-shop-btn" data-id="${s.id}">Rediger</button>
@@ -106,7 +115,8 @@ const handleTestConnection = async () => {
     name: elements.shopName.value.trim(),
     url: elements.shopUrl.value.trim(),
     key: elements.consumerKey.value.trim(),
-    secret: elements.consumerSecret.value.trim()
+    secret: elements.consumerSecret.value.trim(),
+    ssl: elements.useSSL.checked
   };
   if(!shop.name || !shop.url || !shop.key || !shop.secret){
     showStatus('Udfyld alle felter først','error');
@@ -134,6 +144,7 @@ const handleAddShop = async e => {
     url: elements.shopUrl.value.trim(),
     key: elements.consumerKey.value.trim(),
     secret: elements.consumerSecret.value.trim(),
+    ssl: elements.useSSL.checked,
     status: 'testing'
   };
   if(!shop.name || !shop.url || !shop.key || !shop.secret){
@@ -188,6 +199,7 @@ elements.shopsList.addEventListener('click', async e => {
     elements.shopUrl.value = shop.url;
     elements.consumerKey.value = shop.key;
     elements.consumerSecret.value = shop.secret;
+    elements.useSSL.checked = shop.ssl !== false;
     elements.addShop.textContent = 'Opdater Shop';
     elements.addShop.dataset.editId = id;
   }
@@ -222,6 +234,7 @@ elements.shopForm.addEventListener('submit', e => {
       shop.url = elements.shopUrl.value.trim();
       shop.key = elements.consumerKey.value.trim();
       shop.secret = elements.consumerSecret.value.trim();
+      shop.ssl = elements.useSSL.checked;
       shop.status = 'disconnected';
       saveShops(shops);
       renderShops();
