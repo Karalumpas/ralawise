@@ -7,7 +7,7 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #667eea42, #764ba262);
   color: #334155;
   font-family: 'Inter', sans-serif;
   line-height: 1.6;
@@ -294,7 +294,8 @@ body {
   justify-content: center;
   gap: .8rem;
   padding: 1.2rem 2.5rem;
-  min-width: 160px;
+  width: 100%;
+  max-width: 100%;
   border: none;
   border-radius: 16px;
   background: linear-gradient(135deg, #667eea, #764ba2);
