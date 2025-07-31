@@ -41,6 +41,25 @@
       <div id="exportSection" class="hidden">
         <div class="stats-grid" id="statsGrid"></div>
 
+        <div id="exportControls" class="controls-section">
+          <div class="controls-grid">
+            <label class="rate-label" for="exchangeRateInput">Valutakurs (£ → DKK):</label>
+            <input type="number" class="rate-input" id="exchangeRateInput" value="8.80" step="0.01" min="0.01">
+            <label class="rate-label" for="percentageInput">Prisjustering (%):</label>
+            <input type="number" class="rate-input" id="percentageInput" value="0" step="0.01">
+            <label class="rate-label" for="maxVariationsInput">Max linjer pr. variationsfil:</label>
+            <input type="number" class="rate-input" id="maxVariationsInput" value="25000" step="1" min="1">
+            <button class="btn" id="exportBtn">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Eksporter CSV
+            </button>
+          </div>
+          <div id="exportStatus" class="my-4"></div>
+        </div>
+
         <div class="export-section grid gap-8 md:grid-cols-2">
           <div class="filter-panel">
             <div class="filter-header">
@@ -68,25 +87,8 @@
             <div class="filter-list" id="productList"></div>
           </div>
         </div>
-
-        <div class="controls-section">
-          <div class="controls-grid">
-            <label class="rate-label" for="exchangeRateInput">Valutakurs (£ → DKK):</label>
-            <input type="number" class="rate-input" id="exchangeRateInput" value="8.80" step="0.01" min="0.01">
-            <label class="rate-label" for="percentageInput">Prisjustering (%):</label>
-            <input type="number" class="rate-input" id="percentageInput" value="0" step="0.01">
-            <label class="rate-label" for="maxVariationsInput">Max linjer pr. variationsfil:</label>
-            <input type="number" class="rate-input" id="maxVariationsInput" value="25000" step="1" min="1">
-            <button class="btn" id="exportBtn">
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Eksporter CSV
-            </button>
-          </div>
-
-          <div class="preview-section">
+        
+        <div class="preview-section">
             <div class="preview-tabs">
               <button class="preview-tab active" data-tab="parents">Parents Preview</button>
               <button class="preview-tab" data-tab="variations">Variations Preview</button>
@@ -99,8 +101,6 @@
             </div>
           </div>
         </div>
-
-        <div id="exportStatus" class="my-4"></div>
 
         <div id="historySection" class="mt-8 hidden">
           <h2 class="text-xl font-semibold mb-2">Historik</h2>
