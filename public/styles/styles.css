@@ -367,7 +367,10 @@ body {
   border-radius: 8px;
 }
 .preview-table {
-  width: 100%;
+  /* allow table to exceed the container width so horizontal
+     scrolling becomes available when many columns are shown */
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   font-size: .875rem;
 }
