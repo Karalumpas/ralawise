@@ -40,7 +40,8 @@ const elements = {
   previewBody: document.getElementById('previewBody'),
   exportStatus: document.getElementById('exportStatus'),
   historySection: document.getElementById('historySection'),
-  historyList: document.getElementById('historyList')
+  historyList: document.getElementById('historyList'),
+  stepperSteps: document.querySelectorAll('#stepper .step')
 };
 
 // Utility functions
@@ -84,6 +85,18 @@ const setButtonLoading = (btn,loading) => {
     if(svg) svg.style.display='block';
     txt.textContent = btn.id==='processBtn'? 'Behandl filer' : 'Eksporter CSV';
   }
+};
+
+const setActiveStep = step => {
+  elements.stepperSteps.forEach(li => {
+    if (li.dataset.step === step) {
+      li.classList.add('text-indigo-600','font-semibold');
+      li.classList.remove('text-gray-400');
+    } else {
+      li.classList.remove('text-indigo-600','font-semibold');
+      li.classList.add('text-gray-400');
+    }
+  });
 };
 
 // CSV parsing
@@ -264,6 +277,7 @@ const handleFiles = files => {
 const processZipFiles = async () => {
   setButtonLoading(elements.processBtn,true);
   showStatus('Læser ZIP-filer...','info');
+  setActiveStep('process');
   state.processedData = { parents:[], variations:[] };
   state.categories.clear(); state.products.clear();
   state.selectedCategories.clear(); state.selectedProducts.clear();
@@ -292,6 +306,8 @@ const processZipFiles = async () => {
     }
     await processProductData();
     elements.exportSection.classList.remove('hidden');
+    setActiveStep('filter');
+    elements.exportSection.scrollIntoView({behavior:'smooth'});
     showStatus('Filer behandlet succesfuldt!','success');
   } catch (e) {
     showStatus(`Fejl: ${e.message}`,'error');
@@ -452,6 +468,7 @@ const initEventHandlers = () => {
       try { await fetch('/api/history', { method:'POST', body: fd }); } catch {}
 
       showExportStatus(`ZIP-fil genereret med ${files.length} filer!`,'success');
+      setActiveStep('export');
       fetchHistory();
     } catch(e) {
       showExportStatus(`Eksport fejl: ${e.message}`,'error');
@@ -462,6 +479,7 @@ const initEventHandlers = () => {
 // Init app
 const init = () => {
   showStatus('Upload én eller flere ZIP-filer med WooCommerce CSV-data','info');
+  setActiveStep('upload');
   initEventHandlers();
   fetchHistory();
 };

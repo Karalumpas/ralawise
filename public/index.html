@@ -13,6 +13,12 @@
       <h1>WooCommerce Advanced Exporter</h1>
       <p>Upload ZIP-filer med produktdata og eksporter CSV med live preview og smart filtrering</p>
     </div>
+    <ul id="stepper" class="sticky top-0 z-50 bg-white shadow flex justify-center gap-4 py-2 text-sm">
+      <li class="step text-indigo-600 font-semibold" data-step="upload">Upload</li>
+      <li class="step text-gray-400" data-step="process">Behandling</li>
+      <li class="step text-gray-400" data-step="filter">Filtrering</li>
+      <li class="step text-gray-400" data-step="export">Eksport</li>
+    </ul>
     <div class="main-content">
       <div class="upload-section" id="uploadSection">
         <input type="file" id="fileInput" accept=".zip" multiple>
@@ -39,7 +45,7 @@
       <div id="exportSection" class="hidden">
         <div class="stats-grid" id="statsGrid"></div>
 
-        <div class="export-section">
+        <div class="export-section grid gap-8 md:grid-cols-2">
           <div class="filter-panel">
             <div class="filter-header">
               <h3 class="filter-title">Kategorier</h3>
