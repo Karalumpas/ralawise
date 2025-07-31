@@ -13,9 +13,10 @@
       <h1>WooCommerce Advanced Exporter</h1>
       <p>Upload ZIP-filer med produktdata og eksporter CSV med live preview og smart filtrering</p>
     </div>
-    <div class="main-content">
-      <div class="upload-section" id="uploadSection">
-        <input type="file" id="fileInput" accept=".zip" multiple>
+    <div id="mainContent" class="main-content">
+      <div id="uploadGroup">
+        <div class="upload-section" id="uploadSection">
+          <input type="file" id="fileInput" accept=".zip" multiple>
         <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6H16a5 5 0 011 9.9M13 11l-3-3m0 0l-3 3m3-3v12" />
@@ -24,22 +25,42 @@
         <div class="upload-hint">Understøtter flere filer ad gangen</div>
       </div>
 
-      <div class="file-list hidden" id="fileList"></div>
+        <div class="file-list hidden" id="fileList"></div>
 
-      <button class="btn" id="processBtn" disabled>
+        <button class="btn" id="processBtn" disabled>
         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
         <span id="btnText">Behandl filer</span>
-      </button>
+        </button>
 
-      <div id="statusMsg"></div>
+        <div id="statusMsg"></div>
+      </div>
 
       <div id="exportSection" class="hidden">
         <div class="stats-grid" id="statsGrid"></div>
 
-        <div class="export-section">
+        <div id="exportControls" class="controls-section">
+          <div class="controls-grid">
+            <label class="rate-label" for="exchangeRateInput">Valutakurs (£ → DKK):</label>
+            <input type="number" class="rate-input" id="exchangeRateInput" value="8.80" step="0.01" min="0.01">
+            <label class="rate-label" for="percentageInput">Prisjustering (%):</label>
+            <input type="number" class="rate-input" id="percentageInput" value="0" step="0.01">
+            <label class="rate-label" for="maxVariationsInput">Max linjer pr. variationsfil:</label>
+            <input type="number" class="rate-input" id="maxVariationsInput" value="25000" step="1" min="1">
+            <button class="btn" id="exportBtn">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Eksporter CSV
+            </button>
+          </div>
+          <div id="exportStatus" class="my-4"></div>
+        </div>
+
+        <div class="export-section grid gap-8 md:grid-cols-2">
           <div class="filter-panel">
             <div class="filter-header">
               <h3 class="filter-title">Kategorier</h3>
@@ -66,23 +87,8 @@
             <div class="filter-list" id="productList"></div>
           </div>
         </div>
-
-        <div class="controls-section">
-          <div class="controls-grid">
-            <label class="rate-label" for="exchangeRateInput">Valutakurs (£ → DKK):</label>
-            <input type="number" class="rate-input" id="exchangeRateInput" value="8.80" step="0.01" min="0.01">
-            <label class="rate-label" for="maxVariationsInput">Max linjer pr. variationsfil:</label>
-            <input type="number" class="rate-input" id="maxVariationsInput" value="25000" step="1" min="1">
-            <button class="btn" id="exportBtn">
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Eksporter CSV
-            </button>
-          </div>
-
-          <div class="preview-section">
+        
+        <div class="preview-section">
             <div class="preview-tabs">
               <button class="preview-tab active" data-tab="parents">Parents Preview</button>
               <button class="preview-tab" data-tab="variations">Variations Preview</button>
@@ -95,8 +101,6 @@
             </div>
           </div>
         </div>
-
-        <div id="exportStatus" class="my-4"></div>
 
         <div id="historySection" class="mt-8 hidden">
           <h2 class="text-xl font-semibold mb-2">Historik</h2>
